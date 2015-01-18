@@ -1,8 +1,18 @@
-# Reproducible Research: Peer Assessment 1 - Peter Polack
- -------
-## Loading and preprocessing the data
+#Reproducible Research
+-Peer Assessment 1 - Peter Polack
 
-###  Read in working file, assumes working file 'activity.csv' is present in the workding directory
+##Introduction
+It is now possible to collect a large amount of data about personal movement using activity monitoring devices such as a Fitbit, Nike Fuelband, or Jawbone Up.
+
+This assignment makes use of data from a personal activity monitoring device. This device collects data at 5 minute intervals through out the day. The data consists of two months of data from an anonymous individual collected and include the number of steps taken in 5 minute intervals each day.
+
+##Assignment
+This assignment will be described in multiple parts. You will need to write a report that answers the questions detailed. Ultimately, you will need to complete the entire assignment in a single R markdown document that can be processed by knitr and be transformed into an HTML file.
+
+Throughout your report make sure you always include the code that you used to generate the output you present.
+
+###Loading and preprocessing the data
+Read in working file, assumes working file 'activity.csv' is present in the workding directory
 ```{r}
      activity <- read.csv("activity.csv")
 ```
@@ -11,36 +21,44 @@
  - dailysteps - total amount of steps by day
  - intervalsteps - average amount of steps by time interval
 ```{r}
-    dailysteps <- aggregate(list(steps=activity$steps), by = list(date = activity$date), FUN = "sum", na.rm=TRUE)
-     intervalsteps <- aggregate(list(steps=activity$steps), by = list(interval = activity$interval), FUN = "mean", na.rm=TRUE)
+     dailysteps <- aggregate(list(steps=activity$steps), 
+          by = list(date = activity$date), FUN = "sum", na.rm=TRUE)
+     
+     intervalsteps <- aggregate(list(steps=activity$steps), 
+          by = list(interval = activity$interval), FUN = "mean", na.rm=TRUE)
 ```
-  
- -----  
+ 
 ## What is mean total number of steps taken per day?
 ### Mean number of steps per day
 ```{r}
-     mean(dailysteps$steps, na.rm=TRUE)
+     originalmean <- mean(dailysteps$steps, na.rm=TRUE)
+     originalmean
 ```
 ### Median number of steps per day
 ```{r}
-     median(dailysteps$steps, na.rm=TRUE)
+     originalmedian <- median(dailysteps$steps, na.rm=TRUE)
+     originalmedian
 ```
 ### Histogram of number of steps per day
 ```{r}
-     hist(dailysteps$steps, xlab = "# Daily Steps", main="Frequency of # of Daily Steps")
+     hist(dailysteps$steps, xlab = "# Daily Steps", 
+          main="Frequency of # of Daily Steps")
 ```
 
- ------
+
 ## What is the average daily activity pattern?
 ```{r}
-     plot(intervalsteps$interval, intervalsteps$steps, type="l", xlab="Minute intervals", ylab="Steps (mean)")
+     plot(intervalsteps$interval, intervalsteps$steps, type="l", 
+          xlab="Minute intervals", ylab="Steps (mean)")
 ```
+
 ### Which 5-minute interval, on average, contains the maximum number of steps?
 ```{r}
      intervalsteps[which.max(intervalsteps[,2]),]
 ```
 
- -----
+  
+    
 ## Inputing missing values
 
 ### How many NAs are in the original dataset?
@@ -49,51 +67,60 @@
 ```
 
 ### Create copy of original data set and fill NAs with alternative value (explained below)
-
-Strategy for replacing NAs in the copied activity dataset  
- - Will fill copied dataset NAs with averaged interval steps figured out previously in assignment.  
+ - Fill copied dataset NAs with averaged interval steps figured out previously in assignment.
+ - For example: interval 0 NA would be filled with interval 0 average steps.
  
-For example: interval 0 NA would be filled with interval 0 average steps.
 ```{r}
      filledactivity <- activity
      filledactivity[is.na(filledactivity)] = intervalsteps$step
 ```
 
-### Create new "dailyfilledsteps" aggregate, then creat new mean, median and histograme based on them
-New mean and median are higher than original.  New histogram is more bell curved.
-Both of these results are due to replacing the NAs with the average steps per interval.  Original values and diagram are further up in this document
+### Create new "dailyfilledsteps" aggregate, then create new mean, median and histogram based on them
+```{r}
+     dailyfilledsteps <- aggregate(list(steps=filledactivity$steps), 
+          by = list(date = filledactivity$date), FUN = "sum", na.rm=TRUE)
+```
 
+### Original and new mean number of steps per day, based on updated data
 ```{r}
-     dailyfilledsteps <- aggregate(list(steps=filledactivity$steps), by = list(date = filledactivity$date), FUN = "sum", na.rm=TRUE)
+     originalmean
+     newmean <- mean(dailyfilledsteps$steps, na.rm=TRUE)
+     newmean
 ```
-### Mean number of steps per day, based on updated data
+
+### Original and new median number of steps per day, based on updated data
 ```{r}
-     mean(dailyfilledsteps$steps, na.rm=TRUE)
+     originalmedian
+     newmedian <- median(dailyfilledsteps$steps, na.rm=TRUE)
+     newmedian
 ```
-### Median number of steps per day, based on updated data
-```{r}
-     median(dailyfilledsteps$steps, na.rm=TRUE)
-```
+
 ### Histogram of number of steps per day, based on updated data
 ```{r}
-     hist(dailyfilledsteps$steps, xlab = "# Daily Steps", main="Frequency of # of Daily Steps")
+     hist(dailyfilledsteps$steps, xlab = "# Daily Steps", 
+          main="Frequency of # of Daily Steps")
 ```
 
-
- ----
+ - New mean and median are higher than original.
+ - New histogram is more bell curved.
+ - Both of these results are due to replacing the NAs with the average steps per interval.  
+ 
 ## Are there differences in activity patterns between weekdays and weekends?
-### Use updated copy of the original activity dataset and add weekday column that contains the day of the week for that row's date
+ - Use updated copy of the original activity dataset
+ - Add weekday column that contains the day of the week for that row's date
+
 ```{r}
      filledactivity$weekday <- weekdays(as.Date(as.character(filledactivity$date)))
 ```
 
-### Add weekend column that contains "weekday"/"weekend" factor variable
+ - Add weekend column that contains "weekday"/"weekend" factor variable
 ```{r}
-     filledactivity$weekend <- ifelse((filledactivity$weekday=="Saturday"|filledactivity$weekday=="Sunday"),"weekend", "weekday")
+     filledactivity$weekend <- ifelse((filledactivity$weekday=="Saturday"|
+          filledactivity$weekday=="Sunday"),"weekend", "weekday")
      filledactivity$weekend <- as.factor(filledactivity$weekend)
 ```
 
-### Create new aggregate of interval steps on the weekend factor column and interval
+ - Create new aggregate of interval steps on the weekend factor column and interval
 ```{r}
      filledintervalsteps <- aggregate(list(steps=filledactivity$steps), by = list(weekend = filledactivity$weekend, interval = filledactivity$interval), FUN = "mean", na.rm=TRUE)
 
@@ -105,5 +132,6 @@ Both of these results are due to replacing the NAs with the average steps per in
 
 ```{r}
      library(lattice)
-     xyplot(filledintervalsteps$steps ~ filledintervalsteps$interval | filledintervalsteps$weekend, layout = c(1, 2), type="l")
+     xyplot(filledintervalsteps$steps ~ filledintervalsteps$interval | 
+          filledintervalsteps$weekend, layout = c(1, 2), type="l")
 ```
